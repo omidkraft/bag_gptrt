@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>بِگ‌جی‌پی‌تی — چت شیشه‌ای</title>
+
+<!-- فونت -->
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg1: rgba(255,255,255,0.06);
+    --bg2: rgba(255,255,255,0.03);
+    --accent: rgba(120, 90, 255, 0.9);
+    --glass: rgba(255,255,255,0.08);
+    --text: #e9eef8;
+    --muted: rgba(233,238,248,0.6);
+    --success: #7ee787;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: "Vazirmatn", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(135deg, rgba(20,18,46,1) 0%, rgba(26,30,64,1) 50%, rgba(18,26,42,1) 100%);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* پس‌زمینه‌ی تزئینی */
+  .scene {
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    z-index:0;
+  }
+  .blob{
+    position:absolute;
+    filter: blur(70px) saturate(120%);
+    opacity:0.8;
+    transform: translate3d(0,0,0);
+    mix-blend-mode: screen;
+  }
+  .blob.a{ width:520px; height:520px; background: linear-gradient(135deg,#7b61ff,#4ad3ff); top:-10%; right:-15%; }
+  .blob.b{ width:420px; height:420px; background: linear-gradient(135deg,#ff7bb1,#ffb86b); bottom:-15%; left:-10%; opacity:0.55; }
+
+  /* کانتینر */
+  .container{
+    position:relative;
+    max-width:980px;
+    margin:36px auto;
+    z-index:2;
+    padding:28px;
+    display:grid;
+    grid-template-columns: 340px 1fr;
+    gap:20px;
+  }
+
+  /* کارت کنار (منو) */
+  .panel{
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+    border-radius:16px;
+    padding:18px;
+    backdrop-filter: blur(8px) saturate(120%);
+    border:1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 6px 20px rgba(2,6,23,0.5);
+    min-height:520px;
+  }
+  .brand{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .logo{
+    width:56px;height:56px;border-radius:12px;
+    background: linear-gradient(135deg,#6e54ff,#46d3ff);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;color:#fff;font-size:20px;box-shadow:0 6px 18px rgba(69,30,180,0.2);
+  }
+  .brand h1{ margin:0;font-size:18px }
+  .brand p{ margin:0;font-size:12px;color:var(--muted) }
+
+  .panel .section{ margin-top:18px; }
+  .small{ font-size:13px;color:var(--muted);margin-bottom:8px; }
+
+  .preset{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .preset:hover{ transform:translateY(-4px); box-shadow:0 10px 30px rgba(10,14,40,0.6); }
+  .preset .label{ font-weight:600; font-size:14px; }
+  .preset .desc{ font-size:12px; color:var(--muted); }
+
+  .actions{ display:flex; gap:10px;margin-top:12px; }
+  .btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.06); padding:8px 12px;border-radius:10px;color:var(--text);
+    cursor:pointer;font-weight:600;
+  }
+  .btn.primary{
+    background: linear-gradient(90deg,#6e54ff,#46d3ff);
+    border: none; box-shadow: 0 8px 30px rgba(70,51,255,0.15); color:#fff;
+  }
+
+  /* کارت اصلی (چت) */
+  .chatcard{
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border-radius:16px;
+    padding:16px;
+    min-height:520px;
+    display:flex;flex-direction:column;
+    border:1px solid rgba(255,255,255,0.04);
+    backdrop-filter: blur(10px) saturate(140%);
+    box-shadow: 0 10px 40px rgba(2,6,23,0.6);
+  }
+
+  .chat-header{ display:flex; align-items:center; gap:12px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.03); }
+  .bot-avatar{
+    width:54px;height:54px;border-radius:12px;background:linear-gradient(135deg,#6e54ff,#46d3ff);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:20px;
+    box-shadow:0 6px 18px rgba(69,30,180,0.15);
+  }
+  .header-info h2{ margin:0;font-size:16px }
+  .header-info p{ margin:0;font-size:12px;color:var(--muted) }
+
+  /* چت باکس */
+  .messages{
+    padding:18px;
+    display:flex;flex-direction:column;
+    gap:12px;
+    overflow:auto;
+    margin:14px 0;
+    flex:1;
+  }
+
+  .bubble{
+    max-width:78%;
+    padding:12px 14px;
+    border-radius:12px;
+    white-space:pre-wrap;
+    line-height:1.45;
+    font-size:15px;
+    box-shadow: 0 6px 20px rgba(2,6,23,0.55);
+  }
+  .bubble.bot{
+    align-self:flex-start;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--text);
+    position:relative;
+  }
+  .bubble.user{
+    align-self:flex-end;
+    background: linear-gradient(180deg,#1b2140,#111423);
+    border:1px solid rgba(255,255,255,0.04);
+    color:var(--text);
+  }
+
+  .meta{ font-size:11px;color:var(--muted); margin-top:8px; text-align:left; }
+
+  /* ورودی */
+  .composer{
+    display:flex; gap:10px; align-items:center; margin-top:8px;
+    border-top:1px solid rgba(255,255,255,0.03); padding-top:14px;
+  }
+  .input{
+    flex:1; background:transparent; border:1px solid rgba(255,255,255,0.04);
+    padding:12px 14px; border-radius:12px; color:var(--text); font-size:15px; outline:none;
+    backdrop-filter: blur(4px);
+  }
+  .send{
+    background: linear-gradient(90deg,#6e54ff,#46d3ff); border:none; padding:10px 14px; border-radius:12px;
+    color:white; cursor:pointer; font-weight:700;
+  }
+
+  /* نوتیف و typing */
+  .typing{
+    display:inline-flex; gap:6px; align-items:center;
+  }
+  .dot{ width:8px;height:8px;border-radius:50%; background:rgba(255,255,255,0.6); opacity:0.6; animation: blink 1.2s infinite; }
+  .dot:nth-child(2){ animation-delay: 0.15s; }
+  .dot:nth-child(3){ animation-delay: 0.3s; }
+  @keyframes blink{ 0%{opacity:.15}50%{opacity:0.95}100%{opacity:.15} }
+
+  /* دکمه‌های داخل پیام */
+  .msg-actions{ display:flex; gap:8px; position:absolute; right:8px; top:8px; opacity:0; transition:opacity .18s }
+  .bubble.bot:hover .msg-actions, .bubble.user:hover .msg-actions{ opacity:1; }
+  .icon-btn{ background:rgba(255,255,255,0.03); border-radius:8px; padding:6px; cursor:pointer; border:1px solid rgba(255,255,255,0.03); }
+
+  /* ریسپانسیو */
+  @media (max-width:920px){
+    .container{ grid-template-columns: 1fr; padding:18px; }
+    .panel{ order:2; }
+  }
+
+  /* transitions */
+  .fade-in{ animation:fadeIn .18s ease both; }
+  @keyframes fadeIn{ from{opacity:0; transform: translateY(6px)} to{opacity:1; transform:none} }
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+  <div class="blob a"></div>
+  <div class="blob b"></div>
+</div>
+
+<div class="container">
+  <!-- پنل چپ -->
+  <aside class="panel fade-in" aria-label="کنترل‌ها">
+    <div class="brand">
+      <div class="logo">بگ</div>
+      <div>
+        <h1>بِگ‌جی‌پی‌تی</h1>
+        <p>دستیار هوشمند فارسی — پاسخ‌گو + توضیح‌دهنده</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="small">حالت‌های پیشنهادی</div>
+      <div class="preset" onclick="setPreset('مختصر و مفید')">
+        <div>
+          <div class="label">مختصر و مفید</div>
+          <div class="desc">پاسخ کوتاه سپس مثال</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="preset" onclick="setPreset('توضیح مرحله به مرحله')">
+        <div>
+          <div class="label">توضیح مرحله‌به‌مرحله</div>
+          <div class="desc">آموزش گام‌به‌گام همراه مثال</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="preset" onclick="setPreset('کدنویسی دقیق')">
+        <div>
+          <div class="label">کدنویسی دقیق</div>
+          <div class="desc">خروجی با کد اجراشدنی</div>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="small">اقدامات</div>
+      <div class="actions">
+        <button class="btn" onclick="clearChat()">پاک‌کردن</button>
+        <button class="btn primary" onclick="copyAll()">کپی همه</button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:22px;">
+      <div class="small">نکته</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.45">
+        برای اجرا شدن باید سرور Flask روی <strong>http://localhost:5000</strong> فعال باشد.
+      </div>
+    </div>
+  </aside>
+
+  <!-- کارت چت -->
+  <main class="chatcard fade-in" role="main" aria-live="polite">
+    <div class="chat-header">
+      <div class="bot-avatar">بگ</div>
+      <div class="header-info">
+        <h2>بِگ‌جی‌پی‌تی</h2>
+        <p>هر سوالی بپرسی، پاسخ کوتاه + توضیح کامل می‌دهم</p>
+      </div>
+    </div>
+
+    <div id="messages" class="messages" aria-label="پیام‌ها">
+      <!-- پیام‌ها اینجا اضافه می‌شوند -->
+      <div class="bubble bot fade-in" id="welcome">
+        سلام! برای شروع یک سؤال بنویس. من اول پاسخ کوتاه می‌دهم، سپس توضیح و مثال — امتحان کن 😊
+        <div class="meta">مثال: "چطور پایتون رو نصب کنم؟"</div>
+      </div>
+    </div>
+
+    <div class="composer" role="region" aria-label="ورودی پیام">
+      <input id="input" class="input" placeholder="پیام‌تان را بنویسید و Enter را بزنید..." aria-label="متن پیام" />
+      <button class="send" onclick="onSend()">ارسال</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  // کمک‌کننده‌ها
+  const apiUrl = "http://localhost:5000/chat";
+  const messagesEl = document.getElementById("messages");
+  const inputEl = document.getElementById("input");
+
+  // ارسال با Enter
+  inputEl.addEventListener("keydown", (e) => {
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      onSend();
+    }
+  });
+
+  // تنظیم preset (تنها متن نمونه برای کاربر)
+  function setPreset(name){
+    inputEl.value = name + " — لطفا واضح و مرحله‌به‌مرحله توضیح بده.";
+    inputEl.focus();
+  }
+
+  // پاک کردن
+  function clearChat(){
+    messagesEl.innerHTML = "";
+    const w = document.createElement("div");
+    w.className = "bubble bot fade-in";
+    w.id = "welcome";
+    w.innerText = "چیزی پاک شد — دوباره شروع کن. من آماده‌ام!";
+    messagesEl.appendChild(w);
+  }
+
+  // کپی همه
+  function copyAll(){
+    let text = Array.from(messagesEl.querySelectorAll(".bubble")).map(b => b.innerText).join("\n\n---\n\n");
+    navigator.clipboard.writeText(text).then(()=> {
+      alert("متن گفتگو در کلیپ‌بورد کپی شد.");
+    });
+  }
+
+  // افزودن پیام (user/bot)
+  function addMessage(text, who="bot", opts={}){
+    const div = document.createElement("div");
+    div.className = "bubble " + who + " fade-in";
+    div.innerText = text;
+
+    // دکمه‌های داخل پیام (کپی / زمان)
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "icon-btn";
+    copyBtn.title = "کپی پیام";
+    copyBtn.innerText = "کپی";
+    copyBtn.onclick = (e)=>{ e.stopPropagation(); navigator.clipboard.writeText(text); alert("کپی شد"); };
+
+    actions.appendChild(copyBtn);
+    div.appendChild(actions);
+
+    // متا (اختیاری)
+    if(opts.meta){
+      const m = document.createElement("div");
+      m.className = "meta";
+      m.innerText = opts.meta;
+      div.appendChild(m);
+    }
+
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  // نشانگر تایپ
+  function typingIndicator(){
+    const dotWrap = document.createElement("div");
+    dotWrap.className = "bubble bot";
+    dotWrap.id = "typing";
+    const t = document.createElement("div");
+    t.className = "typing";
+    t.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    dotWrap.appendChild(t);
+    messagesEl.appendChild(dotWrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return dotWrap;
+  }
+
+  // ارسال پیام اصلی
+  let isSending=false;
+  async function onSend(){
+    if(isSending) return;
+    const text = inputEl.value.trim();
+    if(!text) return;
+    addMessage(text, "user");
+    inputEl.value = "";
+    isSending = true;
+
+    // متن سیستمی که می‌خواهیم رفتار ربات رو مشخص کنه
+    const system = `تو یک دستیار فارسی مودب و کامل هستی. 
+1) ابتدا یک پاسخ کوتاه و مستقیم بده (1-2 خط).
+2) سپس یک توضیح مرحله‌به‌مرحله و مفصل بده.
+3) در صورت نیاز مثال یا کد اضافه کن.
+4) اگر به اطلاعات بیشتر نیاز داری، بپرس.`;
+
+    // نمایش تایپینگ
+    const typ = typingIndicator();
+
+    try {
+      const res = await fetch(apiUrl, {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ message: text, system: system })
+      });
+
+      if(!res.ok){
+        throw new Error("خطا در اتصال به سرور: " + res.status);
+      }
+
+      const data = await res.json();
+      // حذف تایپینگ
+      typ.remove();
+
+      // اگر پاسخ به شکل {reply: "..."} برگردانده شده
+      const reply = data.reply || data?.message || JSON.stringify(data);
+      addMessage(reply, "bot", { meta: new Date().toLocaleTimeString() });
+    } catch(err){
+      typ.remove();
+      addMessage("خطا: عدم دریافت پاسخ از سرور. مطمئن شوید که سرور اجرا شده و آدرس درست است.", "bot");
+      console.error(err);
+    } finally {
+      isSending=false;
+    }
+  }
+
+  // نمونه: auto-focus
+  window.addEventListener("load", ()=> inputEl.focus() );
+</script>
+
+</body>
+</html>
